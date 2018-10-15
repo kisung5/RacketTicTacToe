@@ -9,6 +9,7 @@
 (define sqrSize 0)
 (define pX 0)
 (define pY 0)
+(define first #t)
 
 (define xSign(make-object bitmap% "x.png"))
 
@@ -17,6 +18,13 @@
 
 (define (aproxPos x)
   (floor ( / x sqrSize)))
+
+(define get-Type
+  (lambda (x)
+    (cond ((number? x) "Number")
+          ((pair? x) "Pair")
+          ((string? x) "String")
+          ((list? x) "List")))) 
 
 ; Derive a new canvas (a drawing window) class to handle events
 (define gameCanvas%
@@ -46,7 +54,11 @@
 
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
-         (displayln (send dc get-scale))  
+         ;(cond (first
+                ;(send dc scale (/(*(/ sqrSize 600)(send xSign get-width))(send xSign get-width))
+                           ;(/(*(/ sqrSize 600)(send xSign get-height))(send xSign get-width)))
+                ;(set! first #f)))
+         ;(displayln(call-with-values (thunk (send dc get-scale)) list))
          ;(send dc scale (/ sqrSize 600)(/ sqrSize 600))
          ;(flomap->bitmap (flomap-resize xSign (- sqrSize 10) (- sqrSize 10)))
          (send dc draw-bitmap xSign (+ (* sqrSize pX) 5) (+ (* sqrSize pY) 5)))
@@ -68,6 +80,7 @@
         (else(calcSqr N)))
   (send frame min-width(* sqrSize M))
   (send frame min-height(* sqrSize N))
+  (set! first #t)
   (define gameCanvas(new gameCanvas% [parent frame]
                          [paint-callback
                           (lambda (canvas dc)
