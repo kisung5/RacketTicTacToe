@@ -2,14 +2,15 @@
 
 ;Kisung Lim
 ;Juego de tic tac toe o gato
-(require images/flomap)
 
 (define this_width 600)
 (define this_height 600)
 (define sqrSize 0)
 (define pX 0)
 (define pY 0)
-(define first #t)
+
+(define red-pen (make-object pen% "RED" 4 'solid))
+(define blue-pen (make-object pen% "BLUE" 4 'solid))
 
 (define xSign(make-object bitmap% "x.png"))
 
@@ -18,13 +19,6 @@
 
 (define (aproxPos x)
   (floor ( / x sqrSize)))
-
-(define get-Type
-  (lambda (x)
-    (cond ((number? x) "Number")
-          ((pair? x) "Pair")
-          ((string? x) "String")
-          ((list? x) "List")))) 
 
 ; Derive a new canvas (a drawing window) class to handle events
 (define gameCanvas%
@@ -52,6 +46,15 @@
               (send dc draw-rectangle(* lineCount sqrSize)(* columnCount sqrSize)sqrSize sqrSize)
               (drawLine fila columna (+ 1 lineCount) columnCount dc)))))
 
+(define (drawX x y dc)
+  (send dc set-pen red-pen)
+  (send dc draw-line x y (-(+ x sqrSize)10) (-(+ y sqrSize)10))
+  (send dc draw-line x (-(+ y sqrSize)10) (-(+ x sqrSize)10) y))
+
+(define (drawO x y dc)
+  (send dc set-pen blue-pen)
+  (send dc draw-ellipse x y (-(+ x sqrSize)10) (-(+ y sqrSize)10)))
+
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
          ;(cond (first
@@ -61,7 +64,7 @@
          ;(displayln(call-with-values (thunk (send dc get-scale)) list))
          ;(send dc scale (/ sqrSize 600)(/ sqrSize 600))
          ;(flomap->bitmap (flomap-resize xSign (- sqrSize 10) (- sqrSize 10)))
-         (send dc draw-bitmap xSign (+ (* sqrSize pX) 5) (+ (* sqrSize pY) 5)))
+         (drawX (+ (* sqrSize pX) 5)(+ (* sqrSize pY) 5)dc))
         (else (let()
                ;((draw-pixmap ventana) "x.png" (make-posn (+ (* 60 pX) 5) (+ (* 60 pY) 5)))
                 ;(jugador ventana fila columna)
@@ -72,6 +75,9 @@
 ;(new gameCanvas% [parent frame])
 
 (define (TTT M N)
+  (cond ((or (or (< M 3) (> M 10)) (or (< N 3) (> N 10)))
+         "Se requiere de tamaño mínimo de 3 y máximo de 10")
+        (else( let()
   (define frame(new frame%
                   [label "Tic Tac Toe"]
                   [stretchable-height #f]
@@ -80,9 +86,8 @@
         (else(calcSqr N)))
   (send frame min-width(* sqrSize M))
   (send frame min-height(* sqrSize N))
-  (set! first #t)
   (define gameCanvas(new gameCanvas% [parent frame]
                          [paint-callback
                           (lambda (canvas dc)
                             (drawColumn M N 0 0 dc))]))
-  (send frame show #t)) 
+  (send frame show #t))))) 
