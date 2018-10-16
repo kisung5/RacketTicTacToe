@@ -2,6 +2,7 @@
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Pablo) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/gui)
+(require "Greedy_Kisung_Pablo.rkt")
 
 ;Kisung Lim
 ;Pablo Esquivel Morales
@@ -12,6 +13,8 @@
 (define sqrSize 0)
 (define pX 0)
 (define pY 0)
+(define Mp 0)
+(define Np 0)
 
 (define gameTable '())
 
@@ -34,15 +37,15 @@
       (cond ((send event button-down? 'left)
              (set! pX(aproxPos(send event get-x)))
              (set! pY(aproxPos(send event get-y)))
-             (displayln (list pX pY))
              (cond ((or(hasAlredy pY pX gameTable 1)(hasAlredy pY pX gameTable -1))
-                    (displayln gameTable)
                     (displayln "Repeticion"))
                    (else
+                    (displayln (list pX pY))
                     (set! gameTable(putM pY pX gameTable 1))
                     (displayln gameTable)
                     (drawEle pX pY (send this get-dc) 0)
                    ;Aqui correria el algoritmo codicioso.
+                    (displayln(candidateSet gameTable 0 0 Np Mp 0))
                     )))))
     ; Call the superclass init, passing on all init args
     (super-new)))
@@ -79,12 +82,12 @@
 
 ;Crea la matriz inicial para el tablero en Gui.
 (define (makeTable x y M N matrix)
-  (cond ((equal? x M)
+  (cond ((equal? x N)
          matrix)
         (else (append (list (makeTableAux x y M N matrix))(makeTable (+ x 1)y M N matrix)))))
 
 (define (makeTableAux x y M N matrix)
-  (cond ((equal? y N)
+  (cond ((equal? y M)
          matrix)
         (else (append (list 0) (makeTableAux x (+ y 1) M N matrix)))))
 
@@ -115,6 +118,8 @@
   (cond ((or (or (< M 3) (> M 10)) (or (< N 3) (> N 10)))
          "Se requiere de tamaño mínimo de 3 y máximo de 10")
         (else( let()
+                (set! Mp M)
+                (set! Np N)
                 (set! gameTable (makeTable 0 0 M N '())) 
                 (define frame(new frame%
                                   [label "Tic Tac Toe"]
