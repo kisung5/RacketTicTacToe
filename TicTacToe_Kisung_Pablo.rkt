@@ -1,9 +1,10 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Lim) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Pablo) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/gui)
 
 ;Kisung Lim
+;Pablo Esquivel Morales
 ;Juego de tic tac toe o gato
 
 (define this_width 600)
@@ -46,6 +47,7 @@
     ; Call the superclass init, passing on all init args
     (super-new)))
 
+;Dibujado del tablero.
 (define (drawColumn fila columna lineCount columnCount dc)
   (cond((equal? columna columnCount))
        (else (let()
@@ -59,6 +61,7 @@
               (send dc draw-rectangle(* lineCount sqrSize)(* columnCount sqrSize)sqrSize sqrSize)
               (drawLine fila columna (+ 1 lineCount) columnCount dc)))))
 
+;Definiciones para dibujado.
 (define (drawX x y dc)
   (send dc set-pen red-pen)
   (send dc draw-line x y (-(+ x sqrSize)10) (-(+ y sqrSize)10))
