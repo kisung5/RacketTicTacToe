@@ -1,4 +1,7 @@
-#lang racket/Gui
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Lim) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require racket/gui)
 
 ;Kisung Lim
 ;Juego de tic tac toe o gato
@@ -8,6 +11,8 @@
 (define sqrSize 0)
 (define pX 0)
 (define pY 0)
+
+(define gameTable '())
 
 (define red-pen (make-object pen% "RED" 4 'solid))
 (define blue-pen (make-object pen% "BLUE" 4 'solid))
@@ -29,7 +34,15 @@
              (set! pX(aproxPos(send event get-x)))
              (set! pY(aproxPos(send event get-y)))
              (displayln (list pX pY))
-             (drawEle pX pY (send this get-dc) 0))))
+             (cond ((or(hasAlredy pY pX gameTable 1)(hasAlredy pY pX gameTable -1))
+                    (displayln gameTable)
+                    (displayln "Repeticion"))
+                   (else
+                    (set! gameTable(putM pY pX gameTable 1))
+                    (displayln gameTable)
+                    (drawEle pX pY (send this get-dc) 0)
+                   ;Aqui correria el algoritmo codicioso.
+                    )))))
     ; Call the superclass init, passing on all init args
     (super-new)))
 
@@ -57,37 +70,59 @@
 
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
-         ;(cond (first
-                ;(send dc scale (/(*(/ sqrSize 600)(send xSign get-width))(send xSign get-width))
-                           ;(/(*(/ sqrSize 600)(send xSign get-height))(send xSign get-width)))
-                ;(set! first #f)))
-         ;(displayln(call-with-values (thunk (send dc get-scale)) list))
-         ;(send dc scale (/ sqrSize 600)(/ sqrSize 600))
-         ;(flomap->bitmap (flomap-resize xSign (- sqrSize 10) (- sqrSize 10)))
          (drawX (+ (* sqrSize pX) 5)(+ (* sqrSize pY) 5)dc))
-        (else (let()
-               ;((draw-pixmap ventana) "x.png" (make-posn (+ (* 60 pX) 5) (+ (* 60 pY) 5)))
-                ;(jugador ventana fila columna)
-                #f))))
+        ((equal? type 1)
+         (drawO (+ (* sqrSize pX) 5)(+ (* sqrSize pY) 5)dc))))
+
+;Crea la matriz inicial para el tablero en Gui.
+(define (makeTable x y M N matrix)
+  (cond ((equal? x M)
+         matrix)
+        (else (append (list (makeTableAux x y M N matrix))(makeTable (+ x 1)y M N matrix)))))
+
+(define (makeTableAux x y M N matrix)
+  (cond ((equal? y N)
+         matrix)
+        (else (append (list 0) (makeTableAux x (+ y 1) M N matrix)))))
+
+;Pone la ficha en el trablero.
+(define (putM x y matrix num)
+  (cond ((equal? x 0)
+         (append (list(putM_aux y (car matrix) num))(cdr matrix)))
+        (else (append (list(car matrix))(putM (- x 1) y (cdr matrix) num)))))
+
+(define (putM_aux y matrix num)
+  (cond ((equal? y 0)
+         (cons num (cdr matrix)))
+        (else (cons (car matrix)(putM_aux (- y 1) (cdr matrix) num)))))
+
+;Verifica la existencia del elemento en el tablero.
+(define (hasAlredy x y matrix num)
+  (cond ((equal? x 0)
+         (hasAlredy_aux y (car matrix) num))
+        (else (hasAlredy (- x 1) y (cdr matrix) num))))
+
+(define (hasAlredy_aux y matrix num)
+  (cond ((equal? y 0)
+         (equal? num (car matrix)))
+        (else (hasAlredy_aux (- y 1) (cdr matrix) num))))
 
 ; Make a canvas that handles events in the frame
-;(define gameCanvas(new gameCanvas% [parent frame]))
-;(new gameCanvas% [parent frame])
-
 (define (TTT M N)
   (cond ((or (or (< M 3) (> M 10)) (or (< N 3) (> N 10)))
          "Se requiere de tamaño mínimo de 3 y máximo de 10")
         (else( let()
-  (define frame(new frame%
-                  [label "Tic Tac Toe"]
-                  [stretchable-height #f]
-                  [stretchable-width #f]))
-  (cond ((> M N)(calcSqr M))
-        (else(calcSqr N)))
-  (send frame min-width(* sqrSize M))
-  (send frame min-height(* sqrSize N))
-  (define gameCanvas(new gameCanvas% [parent frame]
-                         [paint-callback
-                          (lambda (canvas dc)
-                            (drawColumn M N 0 0 dc))]))
-  (send frame show #t))))) 
+                (set! gameTable (makeTable 0 0 M N '())) 
+                (define frame(new frame%
+                                  [label "Tic Tac Toe"]
+                                  [stretchable-height #f]
+                                  [stretchable-width #f]))
+                (cond ((> M N)(calcSqr M))
+                      (else(calcSqr N)))
+                (send frame min-width(* sqrSize M))
+                (send frame min-height(* sqrSize N))
+                (define gameCanvas(new gameCanvas% [parent frame]
+                                       [paint-callback
+                                        (lambda (canvas dc)
+                                          (drawColumn M N 0 0 dc))]))
+                (send frame show #t))))) 
