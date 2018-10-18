@@ -3,36 +3,64 @@
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname Greedy_Algorithm) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket)
 
+;Devuelve el valor buscado de la posicion de la matriz.
+(define (getMatrix matrix x y)
+  (cond ((null? matrix)
+         #f)
+        ((equal? x 0)
+         (getMatrixAux (car matrix) y))
+        (else
+         (getMatrix(cdr matrix)(- x 1)y))))
+
+(define (getMatrixAux matrix y)
+  (cond ((null? matrix)
+         #f)
+        ((equal? y 0)
+         (car matrix))
+        (else
+         (getMatrixAux(cdr matrix)(- y 1)))))
+
+;Define el conjunto de:
+;Espacios vacios = 0 (candidatos).
+;Espacios X = 1 (jugador).
+;Espacios O = -1 (maquina).
+(define (candidateSet matrix x y M N num)
+  (cond ((equal? x M)
+                 '())
+        (else
+         (append(candidateSetAux (car matrix) x y M N num)
+                (candidateSet (cdr matrix) (+ x 1) y M N num)))))
+
+(define (candidateSetAux matrix x y M N num)
+  (cond ((equal? y N)
+         '())
+        (else
+         (cond ((equal? (car matrix) num)
+                (cons (list x y)(candidateSetAux (cdr matrix) x (+ y 1) M N num)))
+               (else
+                (candidateSetAux (cdr matrix) x (+ y 1) M N num))))))
+
 ; Verifica quedan movimientos por hacer
-
 (define (isMovesLeft matrix M N)
-  (isMovesLeftAux matrix M N 0 0))
-
-
-(define (isMovesLeftAux matrix M N I J)
-  (cond ((equal? I M)#f)
-        ((equal? J N) (isMovesLeftAux matrix M N (+ I 1) 0))
-        ((equal? (list-ref (list-ref matrix I) J) 0)#t)
-        (else (isMovesLeftAux matrix M N I (+ J 1)))))
-
-
-
-
-
-
+  (cond ((equal? (candidateSet matrix 0 0 M N 0) '())
+         #f)
+        (else #t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Evaluacion de wins ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
+; M filas N columnas
 ; Evalua si alguna linea ya esta completa
 (define (evaluate matrix M N)
-  (cond ((equal? (checkVertical matrix M N 0 0) 10) 10)
-        ((equal? (checkVertical matrix M N 0 0) -10) -10)
-        ((equal? (checkHorizontal matrix M N 0 0) 10) 10)
-        ((equal? (checkHorizontal matrix M N 0 0) -10) -10)
+  (cond ((checkVertical matrix M N 0 0 1)
+         10)
+        ((checkVertical matrix M N 0 0 -1)
+         -10)
+        ((checkHorizontal matrix M N 0 0 1)
+         10)
+        ((checkHorizontal matrix M N 0 0 -1)
+         -10)
         ;((equal? (checkDiagonal matrix M N 0 0) -10) -10)
         ;((equal? (checkDiagonal matrix M N 0 0) -10) -10)
         (else 0)))
@@ -41,36 +69,49 @@
 
 
 ; checkea si algun jugador gano por linea vertical
-(define (checkVertical matrix M N I J)
-  (cond ((equal? J N)0)
-        ((equal? (+ I 1) M) (checkVertical matrix M N 0 (+ J 1)))
-        ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J)))
-         (cond ((equal? (+ I 2) M)
-                (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10) 
-                      (else 10)))
-               (else (checkVertical matrix M N (+ I 1) J))))
-        ((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J))))
-         (checkVertical matrix M N 0 (+ J 1)))
-        ;(else 0)
-        ))  
+(define (checkVertical matrix M N I J num)
+  (cond ((equal? J N)#f)
+        ((equal? I M)#t)
+        ((and(equal? (getMatrix matrix I J) num)(checkVertical matrix M N (+ I 1) J num))
+         #t)
+        (else (checkVertical matrix M N 0 (+ J 1) num))))
 
+;original
+;(define (checkVertical matrix M N I J num)
+;  (cond ((equal? J N)#f)
+ ;       ((equal? I M) (checkVertical matrix M N 0 (+ J 1)))
+  ;      ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J)))
+   ;      (cond ((equal? (+ I 2) M)
+    ;            (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10) 
+     ;                 (else 10)))
+      ;         (else (checkVertical matrix M N (+ I 1) J))))
+       ; ((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J))))
+        ; (checkVertical matrix M N 0 (+ J 1)))
+        ;(else 0)
+        ;))  
 
 
 ; checkea si algun jugador gano por linea horizontal
-(define (checkHorizontal matrix M N I J)
-  (cond ((equal? I N)0)
-        ((equal? (+ J 1) N) (checkHorizontal matrix M N (+ I 1) 0))
-        ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1))))
-         (cond ((equal? (+ J 2) N)
-                (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10)
-                      (else 10)))
-               (else (checkHorizontal matrix M N I (+ J 1)))))
-        ((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1)))))
-         (checkHorizontal matrix M N (+ I 1) 0))
-        ;(else 0)
-        )) 
- 
+(define (checkHorizontal matrix M N I J num)
+  (cond ((equal? I M)#f)
+        ((equal? J N)#t)
+        ((and(equal?(getMatrix matrix I J) num)(checkHorizontal matrix M N I (+ J 1) num))
+         #t)
+        (else (checkHorizontal matrix M N (+ I 1) J num)))) 
 
+;Original
+;(define (checkHorizontal matrix M N I J num)
+ ; (cond ((equal? I N)0)
+  ;      ((equal? (+ J 1) N) (checkHorizontal matrix M N (+ I 1) 0))
+   ;     ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1))))
+    ;     (cond ((equal? (+ J 2) N)
+     ;           (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10)
+      ;                (else 10)))
+       ;        (else (checkHorizontal matrix M N I (+ J 1)))))
+        ;((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1)))))
+         ;(checkHorizontal matrix M N (+ I 1) 0))
+        ;(else 0)
+        ;)) 
 
 
 (define (checkDiagonal matrix M N)
