@@ -20,6 +20,23 @@
         (else
          (getMatrixAux(cdr matrix)(- y 1)))))
 
+;Devuelve una matriz con el valor agregado en la posicion. 
+(define (setMatrixValue matrix x y value)
+  (cond ((null? matrix)
+         '())
+        ((equal? x 0)
+         (append (list(setMatrixValueAux (car matrix) y value))(cdr matrix)))
+        (else
+         (append (list(car matrix))(setMatrixValue(cdr matrix)(- x 1) y value)))))
+
+(define (setMatrixValueAux matrix y value)
+  (cond ((null? matrix)
+         '())
+        ((equal? y 0)
+         (cons value (cdr matrix)))
+        (else
+         (append(list(car matrix))(setMatrixValueAux(cdr matrix)(- y 1) value)))))
+
 ;Define el conjunto de:
 ;Espacios vacios = 0 (candidatos).
 ;Espacios X = 1 (jugador).
@@ -65,10 +82,7 @@
         ;((equal? (checkDiagonal matrix M N 0 0) -10) -10)
         (else 0)))
 
-  
-
-
-; checkea si algun jugador gano por linea vertical
+; checkea si algun jugador gano por linea vertical.
 (define (checkVertical matrix M N I J num)
   (cond ((equal? J N)#f)
         ((equal? I M)#t)
@@ -76,22 +90,7 @@
          #t)
         (else (checkVertical matrix M N 0 (+ J 1) num))))
 
-;original
-;(define (checkVertical matrix M N I J num)
-;  (cond ((equal? J N)#f)
- ;       ((equal? I M) (checkVertical matrix M N 0 (+ J 1)))
-  ;      ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J)))
-   ;      (cond ((equal? (+ I 2) M)
-    ;            (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10) 
-     ;                 (else 10)))
-      ;         (else (checkVertical matrix M N (+ I 1) J))))
-       ; ((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix (+ I 1)) J))))
-        ; (checkVertical matrix M N 0 (+ J 1)))
-        ;(else 0)
-        ;))  
-
-
-; checkea si algun jugador gano por linea horizontal
+; checkea si algun jugador gano por linea horizontal.
 (define (checkHorizontal matrix M N I J num)
   (cond ((equal? I M)#f)
         ((equal? J N)#t)
@@ -99,25 +98,9 @@
          #t)
         (else (checkHorizontal matrix M N (+ I 1) J num)))) 
 
-;Original
-;(define (checkHorizontal matrix M N I J num)
- ; (cond ((equal? I N)0)
-  ;      ((equal? (+ J 1) N) (checkHorizontal matrix M N (+ I 1) 0))
-   ;     ((and (not(zero? (list-ref (list-ref matrix I) J))) (equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1))))
-    ;     (cond ((equal? (+ J 2) N)
-     ;           (cond ((equal? (list-ref (list-ref matrix I) J) 1) -10)
-      ;                (else 10)))
-       ;        (else (checkHorizontal matrix M N I (+ J 1)))))
-        ;((or (zero? (list-ref (list-ref matrix I) J))(not(equal? (list-ref (list-ref matrix I) J) (list-ref (list-ref matrix I) (+ J 1)))))
-         ;(checkHorizontal matrix M N (+ I 1) 0))
-        ;(else 0)
-        ;)) 
-
-
+; Checkea si algun jugador gano por diagonal. 
 (define (checkDiagonal matrix M N)
   (1))
-
-
 
 (define (DiagonalLeftToRight matrix M N I J)
   (cond ((equal? J N) #f)
@@ -134,24 +117,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-
-
-
-
 
 (define (findBestMove matrix M N)
   (findBestMoveAux matrix -1000 M N 0 0 -1 -1))
 
 
-(define (findBestMoveAux matrix bestValue M N I J  X Y) 
-  (cond ((equal? I M) (list X (- Y 1)));;;;; OJO AQUI HAY QUE CAMBIAR
-        ((equal? J N) (findBestMoveAux matrix bestValue M N (+ I 1) 0 X Y))
-        ((zero? (list-ref (list-ref matrix I) J))
-         (minimaxValue (setMatrixValue matrix I J 0) bestValue (minimax (setMatrixValue matrix I J -1) 0 false M N 0 0 (evaluate matrix M N) ) M N I (+ J 1) X Y))
-        (else (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
+(define (findBestMoveAux matrix bestValue M N I J X Y) 
+  (cond ((equal? I M)
+         (list X Y))
+        ((equal? J N)
+         (findBestMoveAux matrix bestValue M N (+ I 1) 0 X Y))
+        ((equal? (getMatrix matrix I J) 0)
+         (cond (((minimax (setMatrixValue matrix I J 1) 0 false M N 0 0 (evaluate matrix M N)) > bestValue)
+                (findBestMoveAux matrix
+                                 (minimax (setMatrixValue matrix I J 1) 0 false M N 0 0 (evaluate matrix M N))
+                                 M N
+                                 I (+ J 1)
+                                 I J))
+               (else (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
+        ))
 
-
+;Original
+;(define (findBestMoveAux matrix bestValue M N I J X Y) 
+;  (cond ((equal? I M)
+;         (list X Y))
+;        ((equal? J N)
+;         (findBestMoveAux matrix bestValue M N (+ I 1) 0 X Y))
+;        ((equal? (getMatrix matrix I J) 0)
+;         (cond ((minimax()))
+;         (minimaxValue (setMatrixValue matrix I J 0) bestValue (minimax (setMatrixValue matrix I J -1) 0 false M N 0 0 (evaluate matrix M N) ) M N I (+ J 1) X Y))
+;        (else (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
 
 
 
@@ -164,7 +159,7 @@
 ; funcion de miniMax, encuentra el mejor movimiento
 ; minimax(lista matrix, int depth, bool isMax, int M, int N, int I, int J, int score)
 
-(define (minimax matrix depth isMax M N I J score)
+(define (minimax matrix depth isMax M N I J score best)
   (cond ((equal? score 10) score)
         ((equal? score -10) score)
         ((equal? (isMovesLeft matrix M N) #f) 0)
@@ -190,10 +185,6 @@
                                                              (minimax (setMatrixValue matrix I J 1) (+ depth 1) (not isMax) M N 0 0  (evaluate (setMatrixValue matrix I J 1) M N ))
                                                               M N I (+ J 1) isMax depth))
         (else (minimizer matrix best M N I (+ J 1) isMax depth)))) 
-  
-
-(define (setMatrixValue matrix I J value)
-  (list-set matrix I (list-set (list-ref matrix I) J value)))
 
 (provide findBestMove)
  
