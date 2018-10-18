@@ -8,6 +8,7 @@
 ;Pablo Esquivel Morales
 ;Juego de tic tac toe o gato
 
+; Variables que se usan para la construcción de la GUI
 (define frame null)
 
 (define this_width 600)
@@ -18,7 +19,6 @@
 (define Mp 0)
 (define Np 0)
 (define aiList '())
-
 (define gameTable '())
 
 (define red-pen (make-object pen% "RED" 4 'solid))
@@ -46,25 +46,27 @@
                    (else
                     (set! gameTable(putM pY pX gameTable 1))
                     (displayln gameTable)
+                    ;Verifica si hay condición de vistoria o empate. 
                     (cond((equal?(evaluate gameTable Np Mp)10)
                           (displayln "¡Felicidades, ganó!")
-                          (send frame show #f))
-                         ((equal?(evaluate gameTable Np Mp)-10)
-                          (displayln "Buen intento, mejor suerte la próxima.")
                           (send frame show #f))
                          ((equal?(candidateSet gameTable 0 0 Np Mp 0)'())
                           (displayln "Empate, ¡bien jugado!")
                           (send frame show #f))
                          (else
-                    ;(displayln (list pX pY))
-                    (drawEle pX pY (send this get-dc) 0)
-                   ;Aqui correria el algoritmo codicioso.
-                    ;(displayln(candidateSet gameTable 0 0 Np Mp 0))
-                    (set! aiList (findBestMove gameTable Np Mp))
-                    (drawEle (cadr aiList) (car aiList) 
-                           (send this get-dc) 1)
-                    (set! gameTable(putM (car aiList) (cadr aiList) gameTable -1))
-                    (displayln gameTable)
+                          ;Si no hay ganador corre finBestMove que devuelve una lista x y.
+                          (drawEle pX pY (send this get-dc) 0)
+                          (set! aiList (findBestMove gameTable Np Mp))
+                          (drawEle (cadr aiList) (car aiList) 
+                                   (send this get-dc) 1)
+                          (set! gameTable(putM (car aiList) (cadr aiList) gameTable -1))
+                          (displayln gameTable)
+                          (cond((equal?(evaluate gameTable Np Mp)-10)
+                                (displayln "Buen intento, mejor suerte la próxima.")
+                                (send frame show #f))
+                               ((equal?(candidateSet gameTable 0 0 Np Mp 0)'())
+                                (displayln "Empate, ¡bien jugado!")
+                                (send frame show #f)))
                     ))
                     )))))
     ; Call the superclass init, passing on all init args
