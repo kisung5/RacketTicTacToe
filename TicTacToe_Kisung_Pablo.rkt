@@ -49,7 +49,7 @@
                    ;Aqui correria el algoritmo codicioso.
                     ;(displayln(candidateSet gameTable 0 0 Np Mp 0))
                     (set! aiList (findBestMove gameTable Np Mp))
-                    (drawEle(car aiList) (cadr aiList)
+                    (drawEle (cadr aiList) (car aiList) 
                            (send this get-dc) 1)
                     (set! gameTable(putM (car aiList) (cadr aiList) gameTable -1))
                     (displayln gameTable)
@@ -79,7 +79,7 @@
 
 (define (drawO x y dc)
   (send dc set-pen blue-pen)
-  (send dc draw-ellipse x y (- sqrSize10) (- sqrSize 10)))
+  (send dc draw-ellipse x y (- sqrSize 10) (- sqrSize 10)))
 
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
