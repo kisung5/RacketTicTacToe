@@ -1,12 +1,14 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Pablo) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/gui)
 (require "Greedy_Algorithm.rkt")
 
 ;Kisung Lim
 ;Pablo Esquivel Morales
 ;Juego de tic tac toe o gato
+
+(define frame null)
 
 (define this_width 600)
 (define this_height 600)
@@ -21,6 +23,7 @@
 
 (define red-pen (make-object pen% "RED" 4 'solid))
 (define blue-pen (make-object pen% "BLUE" 4 'solid))
+(define black-pen (make-object pen% "BLACK" 2 'solid))
 
 (define xSign(make-object bitmap% "x.png"))
 
@@ -39,11 +42,21 @@
              (set! pX(aproxPos(send event get-x)))
              (set! pY(aproxPos(send event get-y)))
              (cond ((or(hasAlredy pY pX gameTable 1)(hasAlredy pY pX gameTable -1))
-                    (displayln "Repeticion"))
+                    (displayln "Movimiento invalido"))
                    (else
-                    (displayln (list pX pY))
                     (set! gameTable(putM pY pX gameTable 1))
                     (displayln gameTable)
+                    (cond((equal?(evaluate gameTable Np Mp)10)
+                          (displayln "¡Felicidades, ganó!")
+                          (send frame show #f))
+                         ((equal?(evaluate gameTable Np Mp)-10)
+                          (displayln "Buen intento, mejor suerte la próxima.")
+                          (send frame show #f))
+                         ((equal?(candidateSet gameTable 0 0 Np Mp 0)'())
+                          (displayln "Empate, ¡bien jugado!")
+                          (send frame show #f))
+                         (else
+                    ;(displayln (list pX pY))
                     (drawEle pX pY (send this get-dc) 0)
                    ;Aqui correria el algoritmo codicioso.
                     ;(displayln(candidateSet gameTable 0 0 Np Mp 0))
@@ -52,12 +65,14 @@
                            (send this get-dc) 1)
                     (set! gameTable(putM (car aiList) (cadr aiList) gameTable -1))
                     (displayln gameTable)
+                    ))
                     )))))
     ; Call the superclass init, passing on all init args
     (super-new)))
 
 ;Dibujado del tablero.
 (define (drawColumn fila columna lineCount columnCount dc)
+  (send dc set-pen black-pen)
   (cond((equal? columna columnCount))
        (else (let()
                (drawLine fila columna lineCount columnCount dc)
@@ -124,13 +139,12 @@
   (cond ((or (or (< M 3) (> M 10)) (or (< N 3) (> N 10)))
          "Se requiere de tamaño mínimo de 3 y máximo de 10")
         (else( let()
+                (set! frame (new frame%[label "Tic Tac Toe"]
+                  [stretchable-height #f]
+                  [stretchable-width #f]))
                 (set! Mp M)
                 (set! Np N)
                 (set! gameTable (makeTable 0 0 M N '())) 
-                (define frame(new frame%
-                                  [label "Tic Tac Toe"]
-                                  [stretchable-height #f]
-                                  [stretchable-width #f]))
                 (cond ((> M N)(calcSqr M))
                       (else(calcSqr N)))
                 (send frame min-width(* sqrSize M))

@@ -3,6 +3,24 @@
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname Greedy_Algorithm) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket)
 
+;Devuelve el número más alto de la lista.
+(define (getMax lista num)
+  (cond ((null? lista)
+         num)
+        ((>= (car lista) num)
+         (getMax (cdr lista) (car lista)))
+        (else
+         (getMax (cdr lista) num))))
+
+;Devuelve el número más bajo de una lista.
+(define (getMin lista num)
+    (cond ((null? lista)
+         num)
+        ((<= (car lista) num)
+         (getMin (cdr lista) (car lista)))
+        (else
+         (getMin (cdr lista) num))))
+
 ;Devuelve el valor buscado de la posicion de la matriz.
 (define (getMatrix matrix x y)
   (cond ((null? matrix)
@@ -128,63 +146,65 @@
         ((equal? J N)
          (findBestMoveAux matrix bestValue M N (+ I 1) 0 X Y))
         ((equal? (getMatrix matrix I J) 0)
-         (cond (((minimax (setMatrixValue matrix I J 1) 0 false M N 0 0 (evaluate matrix M N)) > bestValue)
+         (cond ((> (minimax (setMatrixValue matrix I J 1)
+                          0 #f M N 0 0 (evaluate matrix M N)) bestValue)
                 (findBestMoveAux matrix
-                                 (minimax (setMatrixValue matrix I J 1) 0 false M N 0 0 (evaluate matrix M N))
+                                 (minimax (setMatrixValue matrix I J 1)
+                                          0 #f M N 0 0 (evaluate matrix M N))
                                  M N
                                  I (+ J 1)
                                  I J))
                (else (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
-        ))
-
-;Original
-;(define (findBestMoveAux matrix bestValue M N I J X Y) 
-;  (cond ((equal? I M)
-;         (list X Y))
-;        ((equal? J N)
-;         (findBestMoveAux matrix bestValue M N (+ I 1) 0 X Y))
-;        ((equal? (getMatrix matrix I J) 0)
-;         (cond ((minimax()))
-;         (minimaxValue (setMatrixValue matrix I J 0) bestValue (minimax (setMatrixValue matrix I J -1) 0 false M N 0 0 (evaluate matrix M N) ) M N I (+ J 1) X Y))
-;        (else (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
-
-
-
-(define (minimaxValue matrix bestValue moveValue M N I J X Y)
-  (findBestMoveAux matrix moveValue M N I J I J))
-
-
-
+         (else
+          (findBestMoveAux matrix bestValue M N I (+ J 1) X Y))))
 
 ; funcion de miniMax, encuentra el mejor movimiento
 ; minimax(lista matrix, int depth, bool isMax, int M, int N, int I, int J, int score)
 
-(define (minimax matrix depth isMax M N I J score best)
-  (cond ((equal? score 10) score)
-        ((equal? score -10) score)
-        ((equal? (isMovesLeft matrix M N) #f) 0)
-        ((equal? isMax #t) (maximizer matrix -1000 M N 0 0 isMax depth))
-        (else (minimizer matrix 1000 M N 0 0 isMax depth))))
-
-
-
+(define (minimax matrix depth isMax M N I J score)
+  (cond ((equal? depth 3)
+         score)
+        ((equal? score 10)
+         score)
+        ((equal? score -10)
+         score)
+        ((equal? (isMovesLeft matrix M N) #f)
+         0)
+        (isMax
+         (maximizer matrix -1000 M N 0 0 isMax depth))
+        (else
+         (minimizer matrix 1000 M N 0 0 isMax depth))))
 
 (define (maximizer matrix best M N I J isMax depth)
-  (cond ((equal? I M) best)
-        ((equal? J N) (maximizer matrix best M N (+ I 1) 0 isMax depth))                                            ;(setMatrixValue matrix I J -1) 
-        ((zero? (list-ref (list-ref matrix I) J)) (maximizer (setMatrixValue matrix I J 0)
-                                                             (minimax (setMatrixValue matrix I J -1) (+ depth 1) (not isMax) M N 0 0 (evaluate (setMatrixValue matrix I J -1) M N))
-                                                              M N I (+ J 1) isMax depth))
-        (else (maximizer matrix best M N I (+ J 1) isMax depth))))
+  (cond ((equal? I M)
+         best)
+        ((equal? J N)
+         (maximizer matrix best M N (+ I 1) 0 isMax depth))                                          
+        ((equal?(getMatrix matrix I J) 0)
+         (maximizer matrix
+                    (max best (minimax (setMatrixValue matrix I J 1)
+                             (+ depth 1) (not isMax) M N 0 0
+                             (evaluate(setMatrixValue matrix I J 1) M N)))
+                    M N I (+ J 1) isMax depth))
+        (else
+         (maximizer matrix best
+                    M N I (+ J 1) isMax depth))))
         
-
 (define (minimizer matrix best M N I J isMax depth) 
-  (cond ((equal? I M) best)
-        ((equal? J N) (minimizer matrix best M N (+ I 1) 0 isMax depth))                                                              ;(list-set matrix (list-ref (list-ref matrix I) J) 1)
-        ((zero? (list-ref (list-ref matrix I) J)) (minimizer (setMatrixValue matrix I J 0)
-                                                             (minimax (setMatrixValue matrix I J 1) (+ depth 1) (not isMax) M N 0 0  (evaluate (setMatrixValue matrix I J 1) M N ))
-                                                              M N I (+ J 1) isMax depth))
-        (else (minimizer matrix best M N I (+ J 1) isMax depth)))) 
+  (cond ((equal? I M)
+         best)
+        ((equal? J N)
+         (minimizer matrix best M N (+ I 1) 0 isMax depth))
+        ((equal?(getMatrix matrix I J) 0)
+         (minimizer matrix
+                    (min best(minimax (setMatrixValue matrix I J -1)
+                             (+ depth 1) (not isMax) M N 0 0
+                             (evaluate (setMatrixValue matrix I J -1) M N)))
+                    M N I (+ J 1) isMax depth))
+        (else
+         (minimizer matrix best
+                    M N I (+ J 1) isMax depth)))) 
 
-(provide findBestMove)
- 
+(provide findBestMove
+         candidateSet
+         evaluate)
