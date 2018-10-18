@@ -2,7 +2,8 @@
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname TicTacToe_Kisung_Pablo) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/gui)
-(require "Greedy_Kisung_Pablo.rkt")
+;(require "Greedy_Kisung_Pablo.rkt")
+(require "Greedy_Algorithm.rkt")
 
 ;Kisung Lim
 ;Pablo Esquivel Morales
@@ -15,6 +16,7 @@
 (define pY 0)
 (define Mp 0)
 (define Np 0)
+(define aiList '())
 
 (define gameTable '())
 
@@ -45,7 +47,12 @@
                     (displayln gameTable)
                     (drawEle pX pY (send this get-dc) 0)
                    ;Aqui correria el algoritmo codicioso.
-                    (displayln(candidateSet gameTable 0 0 Np Mp 0))
+                    ;(displayln(candidateSet gameTable 0 0 Np Mp 0))
+                    (set! aiList (findBestMove gameTable Np Mp))
+                    (drawEle(car aiList) (cadr aiList)
+                           (send this get-dc) 1)
+                    (set! gameTable(putM (car aiList) (cadr aiList) gameTable -1))
+                    (displayln gameTable)
                     )))))
     ; Call the superclass init, passing on all init args
     (super-new)))
@@ -72,7 +79,7 @@
 
 (define (drawO x y dc)
   (send dc set-pen blue-pen)
-  (send dc draw-ellipse x y (-(+ x sqrSize)10) (-(+ y sqrSize)10)))
+  (send dc draw-ellipse x y (/(-(+ x sqrSize)10)3) (/(-(+ y sqrSize)10)3)))
 
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
