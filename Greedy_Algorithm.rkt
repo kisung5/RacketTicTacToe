@@ -103,18 +103,32 @@
 ; checkea si algun jugador gano por linea vertical.
 (define (checkVertical matrix M N I J num)
   (cond ((equal? J N)#f)
-        ((equal? I M)#t)
-        ((and(equal? (getMatrix matrix I J) num)(checkVertical matrix M N (+ I 1) J num))
+        ((equal? I M)#f)
+        ((and(equal? (getMatrix matrix I J) num)(checkVerticalAux matrix M N (+ I 1) J num))
          #t)
         (else (checkVertical matrix M N 0 (+ J 1) num))))
 
+(define (checkVerticalAux matrix M N I J num)
+  (cond ((equal? J N)#f)
+        ((equal? I M)#t)
+        ((and(equal? (getMatrix matrix I J) num)(checkVerticalAux matrix M N (+ I 1) J num))
+         #t)
+        (else #f)))
+  
 ; checkea si algun jugador gano por linea horizontal.
 (define (checkHorizontal matrix M N I J num)
   (cond ((equal? I M)#f)
-        ((equal? J N)#t)
-        ((and(equal?(getMatrix matrix I J) num)(checkHorizontal matrix M N I (+ J 1) num))
+        ((equal? J N)#f)
+        ((and(equal?(getMatrix matrix I J) num)(checkHorizontalAux matrix M N I (+ J 1) num))
          #t)
         (else (checkHorizontal matrix M N (+ I 1) J num)))) 
+
+(define (checkHorizontalAux matrix M N I J num)
+  (cond ((equal? I M)#f)
+        ((equal? J N)#t)
+        ((and(equal?(getMatrix matrix I J) num)(checkHorizontalAux matrix M N I (+ J 1) num))
+         #t)
+        (else #f))) 
 
 ; Checkea si algun jugador gano por diagonal. 
 (define (checkDiagonal matrix M N)
