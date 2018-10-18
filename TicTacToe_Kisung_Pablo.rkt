@@ -79,7 +79,7 @@
 
 (define (drawO x y dc)
   (send dc set-pen blue-pen)
-  (send dc draw-ellipse x y (/(-(+ x sqrSize)10)3) (/(-(+ y sqrSize)10)3)))
+  (send dc draw-ellipse x y (- sqrSize10) (- sqrSize 10)))
 
 (define (drawEle pX pY dc type)
   (cond ((equal? type 0)
