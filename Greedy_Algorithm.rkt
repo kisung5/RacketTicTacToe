@@ -89,66 +89,116 @@
 ; Evalua si alguna linea ya esta completa
 (define (evaluate matrix M N)
   (cond ((checkVertical matrix M N 0 0 1)
-         10)
+         -10)
         ((checkVertical matrix M N 0 0 -1)
-         -10)
-        ((checkHorizontal matrix M N 0 0 1)
          10)
-        ((checkHorizontal matrix M N 0 0 -1)
+        ((checkHorizontal matrix M N 0 0 1)
          -10)
-        ;((equal? (checkDiagonal matrix M N 0 0) -10) -10)
-        ;((equal? (checkDiagonal matrix M N 0 0) -10) -10)
+        ((checkHorizontal matrix M N 0 0 -1)
+         10)
+        ((checkDiagonal matrix M N 1) -10)
+        ((checkDiagonal matrix M N -1) -10)
         (else 0)))
+
+
 
 ; checkea si algun jugador gano por linea vertical.
 (define (checkVertical matrix M N I J num)
   (cond ((equal? J N)#f)
-        ((equal? I M)#f)
-        ((and(equal? (getMatrix matrix I J) num)(checkVerticalAux matrix M N (+ I 1) J num))
+        ((equal? I M)#t)
+        ((and(equal? (getMatrix matrix I J) num)(checkVertical matrix M N (+ I 1) J num))
          #t)
         (else (checkVertical matrix M N 0 (+ J 1) num))))
 
-(define (checkVerticalAux matrix M N I J num)
-  (cond ((equal? J N)#f)
-        ((equal? I M)#t)
-        ((and(equal? (getMatrix matrix I J) num)(checkVerticalAux matrix M N (+ I 1) J num))
-         #t)
-        (else #f)))
-  
+
+
 ; checkea si algun jugador gano por linea horizontal.
 (define (checkHorizontal matrix M N I J num)
   (cond ((equal? I M)#f)
-        ((equal? J N)#f)
-        ((and(equal?(getMatrix matrix I J) num)(checkHorizontalAux matrix M N I (+ J 1) num))
+        ((equal? J N)#t)
+        ((and(equal?(getMatrix matrix I J) num)(checkHorizontal matrix M N I (+ J 1) num))
          #t)
         (else (checkHorizontal matrix M N (+ I 1) J num)))) 
 
-(define (checkHorizontalAux matrix M N I J num)
-  (cond ((equal? I M)#f)
-        ((equal? J N)#t)
-        ((and(equal?(getMatrix matrix I J) num)(checkHorizontalAux matrix M N I (+ J 1) num))
-         #t)
-        (else #f))) 
+
 
 ; Checkea si algun jugador gano por diagonal. 
-(define (checkDiagonal matrix M N)
-  (1))
+(define (checkDiagonal matrix M N num)
+  (cond ((checkFirstDiagonal  matrix M N 0 0 num) #t)
+        ((checkSecondDiagonal  matrix M N 0 0 num) #t)
+        ;((checkThirdDiagonal  matrix M N 0 N num) #t)
+       ; ((checkFourthDiagonal  matrix M N 0 N num) #t)
+        (else #f)))
+         
 
-(define (DiagonalLeftToRight matrix M N I J)
+
+; Diagonales de Izquierda a derecha
+(define (checkFirstDiagonal matrix M N I J num)
   (cond ((equal? J N) #f)
-        (else (DiagonalAux matrix M N 0 J J))))
+        ((or (>= (+ I 2) M) (>= (+ J 2) N))
+         (checkFirstDiagonal matrix M N 0 (+ J 1) num))
+        ((and (equal? (getMatrix matrix I J) (getMatrix matrix (+ I 1) (+ J 1)))
+              (equal? (getMatrix matrix (+ I 1) (+ J 1)) (getMatrix matrix (+ I 2) (+ J 2)))
+              (equal? (getMatrix matrix (+ I 2) (+ J 2)) num))
+         (cond ((or (>= (+ I 3) M) (>= (+ J 3) N))
+                #t)
+               (else (checkFirstDiagonal matrix M N (+ I 1) (+ J 1) num))))
+        (else (checkFirstDiagonal matrix M N 0 (+ J 1) num))))
+         
 
-(define (DiagonalAux matrix M N I J Jtemp)
-  (cond ((equal? (list-ref (list-ref matrix I) Jtemp) 0)
-         (DiagonalLeftToRight matrix M N 0 (+ J 1)))
-        ((or (>= (+ I 2) M) (>= (+ Jtemp 2) N)) #t)
-        (else (cond ((and (equal? (list-ref (list-ref matrix I) Jtemp) (list-ref (list-ref matrix (+ I 1)) (+ Jtemp 1))) (equal? (list-ref (list-ref matrix (+ I 1)) (+ Jtemp 1)) (list-ref (list-ref matrix (+ I 2)) (+ Jtemp 2))))
-                     (DiagonalAux matrix M N (+ I 1) J (+ J 1)))
-                    (else (DiagonalLeftToRight matrix M N 0 (+ J 1))))))) 
-          
+
+
+
+
+; Diagonales de arriba a abajo, lado izquierdo
+
+(define (checkSecondDiagonal matrix M N I J num)
+  (cond ((equal? I M) #f)
+        ((or (>= (+ I 2) M) (>= (+ J 2) N))
+         (checkSecondDiagonal matrix M N (+ I 1) 0 num))
+        ((and (equal? (getMatrix matrix I J) (getMatrix matrix (+ I 1) (+ J 1)))
+              (equal? (getMatrix matrix (+ I 1) (+ J 1)) (getMatrix matrix (+ I 2) (+ J 2)))
+              (equal? (getMatrix matrix (+ I 2) (+ J 2)) num))
+         (cond ((or (>= (+ I 3) M) (>= (+ J 3) N))
+                #t)
+               (else (checkSecondDiagonal matrix M N (+ I 1) (+ J 1) num))))
+        (else (checkSecondDiagonal matrix M N (+ I 1) 0 num))))
+
+
+
+;diagonales de derecha a izquierda
+(define (checkThirdDiagonal matrix M N I J num)
+  (cond ((< N 0) #f)
+        ((or (< (- J 2) 0) (>= (+ I 2) M))
+         (checkThirdDiagonal matrix M (- N 1) 0 (- N 1) num))
+        ((and (equal? (getMatrix matrix I J) (getMatrix matrix (+ I 1) (- J 1)))
+              (equal? (getMatrix matrix (+ I 1) (- J 1)) (getMatrix matrix (+ I 2) (- J 2)))
+              (equal? (getMatrix matrix (+ I 2) (- J 2)) num))
+         (cond ((or (>= (+ I 3) M) (< (- J 3) 0))
+                #t)
+               (else (checkThirdDiagonal matrix M N (+ I 1) (- J 1) num))))
+        (else (checkThirdDiagonal matrix  M (- N 1) 0 (- N 1) num))))
+
+
+
+;diagonales de arriba hacia abajo, lado derecho
+(define (checkFourthDiagonal matrix M N I J num)
+  (cond ((equal? I M) #f)
+        ((or (< (- J 2) 0) (>= (+ I 2) M))
+         (checkFourthDiagonal matrix M N (+ I 1) N num))
+        ((and (equal? (getMatrix matrix I J) (getMatrix matrix (+ I 1) (- J 1)))
+              (equal? (getMatrix matrix (+ I 1) (- J 1)) (getMatrix matrix (+ I 2) (- J 2)))
+              (equal? (getMatrix matrix (+ I 2) (- J 2)) num))
+         (cond ((or (>= (+ I 3) M) (< (- J 3) 0))
+                #t)
+               (else (checkFourthDiagonal matrix M N (+ I 1) (- J 1) num))))
+        (else (checkFourthDiagonal matrix  M N (+ I 1) N num))))
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 (define (findBestMove matrix M N)
   (findBestMoveAux matrix -1000 M N 0 0 -1 -1))
